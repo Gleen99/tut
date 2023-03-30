@@ -31,7 +31,8 @@ class RegistrationFormType extends AbstractType
                 'multiple' => true,
                 'choice_translation_domain' => 'user',
                 'choices' => [
-                    'Utilisateur' => 'ROLE_USER',
+                    'User' => 'ROLE_USER',
+                    'Admin' => 'ROLE_ADMIN',
                 ],
             ))
 
