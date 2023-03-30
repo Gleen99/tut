@@ -14,12 +14,10 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Security;
 use Doctrine\Persistence\ManagerRegistry as PersistenceManagerRegistry;
-
-
 class PostController extends AbstractController
 {
     #[Route('/post/{id}', name: 'app_post')]
-    public function index(EntityManagerInterface $entityManager, int $id): Response
+    public function index( EntityManagerInterface $entityManager, int $id): Response
     {
         $posts = $entityManager->getRepository(Posts::class)->findBy(['id' => $id], []);
 
@@ -47,7 +45,7 @@ class PostController extends AbstractController
             'user' => $this->getUser()
         ]);
     }
-
+/**Create Comments */
 
     
     #[Route("/post/{id}/comment/add", name: "add_comment")]
@@ -69,21 +67,31 @@ class PostController extends AbstractController
             'id' => $post->getId()
         ]);
     }
-    #[Route("/comment/{id}/like", name:"like_comment")]
-    public function likeComment(Comments $comment, EntityManagerInterface $entityManager)
-    {
-        $comment->setLikes($comment->getLikes() + 1);
-        $entityManager->flush();
-    
-        return $this->redirectToRoute('app_post', [
-            'id' => $comment->getPost()->getId()
-        ]);
+/**Like Posts */
+#[Route("/comment/{id}/like", name:"like_comment")]
+public function likeComment(Comments $comment, EntityManagerInterface $entityManager)
+{
+      //Si pas de likes trouvé, on set à null comme ça le twig gère l'erreur
+      if (!$comment) {
+        $comment= [null];
     }
 
+    $comment->setLikes($comment->getLikes() + 1);
+    $entityManager->flush();
 
+    return $this->redirectToRoute('app_post', [
+        'id' => $comment->getPost()->getId()
+    ]);}
+/**Dislike Posts */
 #[Route("/comment/{id}/dislike", name:"dislike_comment")]
 public function dislikeComment(Comments $comment, EntityManagerInterface $entityManager)
 {
+          //Si pas de likes trouvé, on set à null comme ça le twig gère l'erreur
+
+    if (!$comment) {
+        $comments = [null];
+    }
+
     $comment->setDislikes($comment->getDislikes() + 1);
     $entityManager->flush();
 
@@ -91,57 +99,64 @@ public function dislikeComment(Comments $comment, EntityManagerInterface $entity
         'id' => $comment->getPost()->getId()
     ]);
 }
+/**Create Posts */
 
-    #[Route("/posts/remove/{id}", name:"app_delete_post")]
-    
-    public function deletePost(int $id, Posts $post, Comments $comment, PersistenceManagerRegistry $doctrine): Response
-    {
-        $entityManager = $doctrine->getManager();
-        $postsRepository = $entityManager->getRepository(Posts::class);
-        
-        if (!$post) {
-            throw $this->createNotFoundException(sprintf('The post with id "%s" could not be found', $request->get('id')));
-        }
+#[Route('/new/post', name: 'app_new_post')]
+public function new(Request $request, EntityManagerInterface $entityManager): Response
+{
+    $post = new Posts();
+    $form = $this->createForm(PostType::class, $post);
 
-        // Supprimer les commentaires du post
-        $comments = $post->getComments();
-        foreach ($comments as $comment) {
-            $entityManager = $doctrine->getManager();
-            $entityManager->remove($comment);
-            $entityManager->flush();
-        }
+    $form->handleRequest($request);
+    if ($form->isSubmitted() && $form->isValid()) {
+        // Ajouter le créateur du post
+        $post->setCreator($this->getUser());
 
-        // Supprimer le post lui-même
-        $entityManager = $doctrine->getManager();
-        $entityManager->remove($post);
+        // Enregistrer le post dans la base de données
+        $entityManager->persist($post);
         $entityManager->flush();
 
-        // Redirection vers la liste des posts
-        return $this->redirectToRoute('app_profile');
+        $this->addFlash('success', 'Le post a été créé avec succès !');
+        return $this->redirectToRoute('app_posts');
     }
 
-    #[Route('/new/post', name: 'app_new_post')]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
-    {
-        $post = new Posts();
-        $form = $this->createForm(PostType::class, $post);
-
-        $form->handleRequest($request);
-        if ($form->isSubmitted() && $form->isValid()) {
-            // Ajouter le créateur du post
-            $post->setCreator($this->getUser());
-
-            // Enregistrer le post dans la base de données
-            $entityManager->persist($post);
-            $entityManager->flush();
-
-            $this->addFlash('success', 'Le post a été créé avec succès !');
-            return $this->redirectToRoute('app_posts');
-        }
-
-        return $this->render('post/new.html.twig', [
-            'user' => $this->getUser(),
-                        'form' => $form->createView(),
-        ]);
+    return $this->render('post/new.html.twig', [
+        'user' => $this->getUser(),
+                    'form' => $form->createView(),
+    ]);
+}
+/**
+ * Supprimer Posts
+ */
+#[Route("/posts/remove/{id}", name:"app_delete_post")]
+    
+public function deletePost(int $id,Posts $post, Comments $comment, PersistenceManagerRegistry $doctrine): Response
+{
+    $entityManager = $doctrine->getManager();
+    $postsRepository = $entityManager->getRepository(Posts::class);
+    
+    if (!$post) {
+        throw $this->createNotFoundException(sprintf('The post with id "%s" could not be found', $request->get('id')));
     }
+
+ // Supprimer les commentaires du post
+$comments = $post->getComments();
+foreach ($comments as $comment) {
+// Supprimer les reports associés au commentaire
+$reports = $comment->getReports();
+foreach ($reports as $report) {
+    $entityManager->remove($report);
+}
+
+// Supprimer le commentaire lui-même
+$entityManager->remove($comment);
+}
+
+// Supprimer le post lui-même
+$entityManager->remove($post);
+$entityManager->flush();
+
+    // Redirection vers la liste des posts
+    return $this->redirectToRoute('app_posts');
+}
 }

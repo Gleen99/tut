@@ -13,7 +13,6 @@
 
     {% else %}
  <h2>Posts by {{ user.username }}</h2>
-     <a href="{{ path('app_new_post') }}" class="btn btn-primary">Ajouter un post</a>
        
             <div class="container w-100">
                 <div class="row justify-content-around flex-wrap overflow-auto">
@@ -22,7 +21,8 @@
                           <p>{{ post.content }}</p>
                           <div class="card-footer text-muted">Publié le {{ post.date|date('d/m/Y') }}
                           <a href={{ path('app_post', {'id':post.id})}} class="btn btn-primary">Voir plus</a>
-                          <br><a href={{ path('app_delete_post', {'id':post.id})}} class="btn btn-primary">Delete Post</a>
+                             <br> <a href="{{ path('app_new_post') }}" class="btn btn-primary">Ajouter un post</a>
+                         <br> <br><a href={{ path('app_delete_post', {'id':post.id})}} class="btn btn-primary">Delete Post</a>
                           </div>
                     {% endfor %}
                 </div>

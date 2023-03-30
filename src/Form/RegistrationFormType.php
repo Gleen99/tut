@@ -22,16 +22,19 @@ class RegistrationFormType extends AbstractType
         $builder
 
             ->add('username')
-            ->add('email', EmailType::class)
-            ->add('firstname')
+            ->add('email', EmailType::class)            ->add('firstname')
             ->add('lastname')
-            ->add('roles', ChoiceType::class, array(
+            
+          ->add('roles', ChoiceType::class, array(
                 'label' => 'form.label.roles',
                 'required' => true,
                 'multiple' => true,
                 'choice_translation_domain' => 'user',
-                'choices' => User::ROLES
+                'choices' => [
+                    'Utilisateur' => 'ROLE_USER',
+                ],
             ))
+
             ->add('password', RepeatedType::class, [
                 // instead of being set onto the object directly,
                 // this is read and encoded in the controller

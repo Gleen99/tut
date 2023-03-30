@@ -32,14 +32,13 @@
                         <h6 class="card-title text-muted pb-0 mb-0 mt-2"><b class="fs-4">{{ comment.text }}</b> crée par {{ comment.creator.username }}</h6>
                         <a class="pt-0 mt-0" href={{ path('app_report', {'id':comment.id}) }}>Signaler ({{ comment.reports.count }})</a>
                           <div>
-<a href="{{ path('like_comment', {'id': comment.id}) }}" class="btn btn-success">J'aime({{ comment.likes }})</a>
-                          <a href="{{ path('dislike_comment', {'id': comment.id}) }}" class="btn btn-danger">Je n'aime pas</a> 
+                          <a href="{{ path('like_comment', {'id': comment.id}) }}" class="btn btn-success">J'aime({{ comment.likes }})</a>
+                          <a href="{{ path('dislike_comment', {'id': comment.id}) }}" class="btn btn-danger">Je n'aime pas({{ comment.dislikes }})</a> 
                                          </div>
+                                         
                     {% endfor %}
                     </div>
                 </div>
-
-
 
                 <div class="card text-center w-100 mt-4 p-0 mb-4">
                     <div class="card-header">Ajouter un commentaire</div>

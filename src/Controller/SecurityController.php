@@ -50,6 +50,13 @@ class SecurityController extends AbstractController
         $form->handleRequest($request);
     
         if ($form->isSubmitted() && $form->isValid()) {
+            // Check if username already exists
+            $existingUser = $entityManager->getRepository(User::class)->findOneBy(['username' => $user->getUsername()]);
+            if ($existingUser) {
+                $this->addFlash('error', 'Username already exists.');
+                return $this->redirectToRoute('app_register');
+            }
+    
             // encode the plain password
             $user->setPassword(
                 $userPasswordHasher->hashPassword(
@@ -86,5 +93,6 @@ class SecurityController extends AbstractController
             'user' => $this->getUser()
         ]);
     }
+    
     
 }
